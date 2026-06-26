@@ -21,7 +21,7 @@ use bevy::{
     platform::collections::HashMap,
     prelude::{Deref, DerefMut},
     reflect::Reflect,
-    scene::SceneRoot,
+    world_serialization::WorldAssetRoot,
 };
 use smallvec::{SmallVec, smallvec};
 use std::iter;
@@ -93,7 +93,7 @@ pub fn retarget_animations(
         for (group_index, group) in animation_retargeter.groups.iter_mut().enumerate() {
             let group_index = AnimationLayer(group_index as u32);
             group.animations.retain(|(clip, repeat)| {
-                let animation_graph = animation_graph_assets
+                let mut animation_graph = animation_graph_assets
                     .get_mut(animation_graph.id())
                     .expect("Animation graph wasn't loaded");
 
@@ -167,7 +167,7 @@ pub fn retarget_animations(
                         }
 
                         match create_retargeted_animation_for_2d_blend(
-                            animation_graph,
+                            &mut animation_graph,
                             group.graph_node,
                             center.id(),
                             rings,
@@ -242,7 +242,7 @@ fn create_retargeted_animation_for_2d_blend(
 
 pub fn prepare_retargeting(
     mut commands: Commands,
-    q_retargeting_targets: Query<(Entity, &AnimationRetargeter, &SceneRoot)>,
+    q_retargeting_targets: Query<(Entity, &AnimationRetargeter, &WorldAssetRoot)>,
     q_candidate_targets: Query<(Option<&Name>, Option<&Children>)>,
     asset_server: Res<AssetServer>,
 ) {
