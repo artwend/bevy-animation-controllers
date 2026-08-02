@@ -472,7 +472,6 @@ pub fn advance_transitions(
 
             // Distribute remaining weight.
             //
-            // FIXME: This evaluates animations twice! Such a botch!
             if let Some(main_animation) = &animation_group_controller.main_animation {
                 distribute_weight(
                     &mut player,
