@@ -343,16 +343,20 @@ impl LayerAnimations {
                     weight
                 );
 
-                player
-                    .play(new_animation.nodes[prev_index])
-                    .set_repeat(repeat)
-                    .set_weight(1.0 - weight);
+                // Only ensure the right nodes are actively playing here.
+                // Weight is deliberately NOT set: distribute_weight (called
+                // from advance_transitions later this same frame) is the
+                // single source of truth for weight, since it correctly
+                // accounts for remaining_weight from any in-flight fade on
+                // this layer. Setting weight here too was pure duplicate
+                // work - the same interpolation ran twice per frame, and
+                // whichever transitions happened to be in flight would
+                // briefly see the wrong (un-scaled) weight from this call
+                // before distribute_weight corrected it moments later.
+                player.play(new_animation.nodes[prev_index]).set_repeat(repeat);
 
                 if let Some(next_index) = next_index {
-                    player
-                        .play(new_animation.nodes[next_index])
-                        .set_repeat(repeat)
-                        .set_weight(weight);
+                    player.play(new_animation.nodes[next_index]).set_repeat(repeat);
                 }
             }
 
@@ -394,7 +398,7 @@ impl LayerAnimations {
                     return;
                 };
                 let AnimationBlendAssetType::Blend2d {
-                    ref rings,
+                    rings: ref _rings,
                     center: _,
                 } = blend.blend_type
                 else {
@@ -408,14 +412,14 @@ impl LayerAnimations {
 
                 *playing_time = new_time;
 
-                let weights = interpolation::polar_bilinear_interpolate(
-                    rings,
-                    &new_animation.nodes,
-                    new_time,
-                );
-
-                for (node, weight) in new_animation.nodes.iter().zip(weights.iter()) {
-                    player.play(*node).set_repeat(repeat).set_weight(*weight);
+                // Only ensure nodes are playing here - don't compute weights
+                // at all. distribute_weight (via advance_transitions, later
+                // this same frame) is the single place polar_bilinear_interpolate
+                // runs and weight gets set; running it here too was pure
+                // duplicate work, with a transient-wrong-weight risk while a
+                // transition was in flight on this layer.
+                for node in new_animation.nodes.iter() {
+                    player.play(*node).set_repeat(repeat);
                 }
             }
 
