@@ -444,9 +444,10 @@ pub fn advance_transitions(
     // is divided between all the other layers, eventually culminating in the
     // currently-playing animation receiving whatever's left. This results in a
     // nicely normalized weight.
-    let mut remaining_weight = 1.0;
     for (mut animation_controller, mut player) in q_animations.iter_mut() {
         for animation_group_controller in animation_controller.layers.iter_mut() {
+            // Each independent AnimationLayer gets its own 1.0 weight budget.
+            let mut remaining_weight = 1.0;
             for transition in &mut animation_group_controller.transitions.iter_mut().rev() {
                 // Decrease weight.
                 transition.current_weight = (transition.current_weight
