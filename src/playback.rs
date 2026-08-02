@@ -140,7 +140,6 @@ impl LayerAnimations {
             }
 
             // Enqueue a transition.
-            // FIXME: Is this right?
             let Some(old_animation) = player.animation_mut(*old_playing_animation_node) else {
                 info!(
                     "Couldn't find active animation for {:?}",
@@ -159,9 +158,10 @@ impl LayerAnimations {
                 "Enqueuing transition from {:?}",
                 *old_playing_animation_node
             );
+            let starting_weight = old_animation.weight();
             self.transitions.push(TransitioningAnimation {
-                current_weight: old_animation.weight(),
-                weight_decline_per_sec: 1.0 / transition_duration.as_secs_f32(),
+                current_weight: starting_weight,
+                weight_decline_per_sec: starting_weight / transition_duration.as_secs_f32(),
                 animation: *old_playing_animation_node,
             });
         }
