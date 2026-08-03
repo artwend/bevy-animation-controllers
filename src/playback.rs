@@ -217,49 +217,19 @@ impl LayerAnimations {
                     weight
                 );
 
-                player
-                    .start(new_animation.nodes[prev_index])
-                    .set_repeat(repeat)
-                    .set_weight(1.0 - weight);
+                player.start(new_animation.nodes[prev_index]).set_repeat(repeat);
 
                 if let Some(next_index) = next_index {
-                    player
-                        .start(new_animation.nodes[next_index])
-                        .set_repeat(repeat)
-                        .set_weight(weight);
+                    player.start(new_animation.nodes[next_index]).set_repeat(repeat);
                 }
             }
 
             AnimationBlend::Blend {
-                blend: blend_id,
-                time: AnimationBlendTime::Blend2d(time),
+                blend: _,
+                time: AnimationBlendTime::Blend2d(_),
             } => {
-                let Some(blend) = animation_blend_assets.get(blend_id) else {
-                    warn!(
-                        "Couldn't start playing new 2D blend {:?} because the blend asset didn't \
-                         exist",
-                        blend_id
-                    );
-                    return;
-                };
-                let AnimationBlendAssetType::Blend2d {
-                    ref rings,
-                    center: _,
-                } = blend.blend_type
-                else {
-                    warn!(
-                        "Couldn't start playing new 2D blend {:?} because the blend asset wasn't a \
-                         2D blend",
-                        blend_id
-                    );
-                    return;
-                };
-
-                let weights =
-                    interpolation::polar_bilinear_interpolate(rings, &new_animation.nodes, time);
-
-                for (&node, weight) in new_animation.nodes.iter().zip(weights.iter()) {
-                    player.start(node).set_repeat(repeat).set_weight(*weight);
+                for &node in new_animation.nodes.iter() {
+                    player.start(node).set_repeat(repeat);
                 }
             }
         }
@@ -381,34 +351,13 @@ impl LayerAnimations {
                             blend: ref mut playing_blend,
                             time: AnimationBlendTime::Blend2d(ref mut playing_time),
                         },
-                    ref label,
+                    label: _,
                 },
             ) => {
                 if new_blend != *playing_blend {
                     warn!("Attempted to change the time of a 2D blend that wasn't playing");
                     return;
                 }
-
-                let Some(blend) = animation_blend_assets.get(new_blend) else {
-                    warn!(
-                        "Couldn't start playing new 2D blend {:?} because the blend asset didn't \
-                         exist",
-                        label,
-                    );
-                    return;
-                };
-                let AnimationBlendAssetType::Blend2d {
-                    rings: ref _rings,
-                    center: _,
-                } = blend.blend_type
-                else {
-                    warn!(
-                        "Couldn't start playing new 2D blend {:?} because the blend asset wasn't a \
-                         2D blend",
-                        new_blend
-                    );
-                    return;
-                };
 
                 *playing_time = new_time;
 
