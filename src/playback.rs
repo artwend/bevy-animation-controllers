@@ -121,6 +121,21 @@ impl LayerAnimations {
         }
     }
 
+    /// Fades out whatever is currently playing on this layer, leaving
+    /// `main_animation` as `None` afterward instead of just decaying to zero
+    /// weight with nothing tracked. Use this (rather than simply letting a
+    /// layer's weight lapse) whenever a layer should genuinely go quiet -
+    /// e.g. holstering a weapon and dropping the upper-body layer back to
+    /// nothing rather than switching to another pose.
+    ///
+    /// Pass [`Duration::ZERO`] to stop instantly.
+    pub fn stop(&mut self, player: &mut AnimationPlayer, transition_duration: Duration) {
+        let Some(old_playing_animation) = self.main_animation.take() else {
+            return;
+        };
+        self.fade_out_or_stop(player, &old_playing_animation, transition_duration);
+    }
+
     fn transition_away_from_old_animation(
         &mut self,
         player: &mut AnimationPlayer,
@@ -130,7 +145,15 @@ impl LayerAnimations {
         let Some(old_playing_animation) = self.main_animation.replace(new_animation) else {
             return;
         };
+        self.fade_out_or_stop(player, &old_playing_animation, transition_duration);
+    }
 
+    fn fade_out_or_stop(
+        &mut self,
+        player: &mut AnimationPlayer,
+        old_playing_animation: &PlayingAnimation,
+        transition_duration: Duration,
+    ) {
         for old_playing_animation_node in old_playing_animation.nodes.iter() {
             if transition_duration.is_zero() {
                 // Immediately stop the old animation.
@@ -155,7 +178,7 @@ impl LayerAnimations {
                 continue;
             }
             trace!(
-                "Enqueuing transition from {:?}",
+                "Enqueuing fade-out transition from {:?}",
                 *old_playing_animation_node
             );
             let starting_weight = old_animation.weight();
