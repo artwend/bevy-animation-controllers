@@ -97,8 +97,8 @@ fn linear_interpolate_ring(
     if ring.stops.len() == 1 {
         return LinearInterpolationWeights {
             prev_stop_index: 0,
-            next_stop_index: 1,
-            time: 0.0,
+            next_stop_index: 0,
+            time: 1.0,
         };
     }
 
